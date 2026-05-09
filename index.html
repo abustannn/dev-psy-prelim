@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevPsych Board Exam Practice</title>
+    <style>
+        :root {
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --ios-bg: #F2F2F7;
+            --card-bg: #FFFFFF;
+            --text-main: #1C1C1E;
+            --text-secondary: #8E8E93;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--ios-bg);
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        #quiz-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+
+        /* Progress Bar */
+        .progress-header { margin-bottom: 30px; }
+        .progress-container {
+            height: 8px;
+            background: #E5E5EA;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--ios-blue);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .meta-info {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Question Styles */
+        h2 { font-size: 20px; line-height: 1.4; color: var(--text-main); margin-top: 10px; }
+
+        .options-list { margin-top: 25px; }
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            margin-bottom: 12px;
+            border: 1.5px solid #E5E5EA;
+            border-radius: 16px;
+            background: white;
+            text-align: left;
+            font-size: 16px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover { border-color: var(--ios-blue); background: #F9F9FB; }
+        .option-btn:active { transform: scale(0.98); background: #F2F2F7; }
+
+        /* Results Screen */
+        .result-screen { text-align: center; display: none; }
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .pass { background: var(--ios-green); }
+        .fail { background: var(--ios-red); }
+        
+        .status-text { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .detail-text { color: var(--text-secondary); margin-bottom: 30px; }
+
+        .btn-retry {
+            background: var(--ios-blue);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-retry:hover { opacity: 0.9; }
+
+        /* Summary Table */
+        .summary-table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+        .summary-table th { color: var(--text-secondary); padding: 10px; border-bottom: 1px solid #E5E5EA; }
+        .summary-table td { padding: 12px 10px; border-bottom: 1px solid #F2F2F7; }
+        .res-correct { color: var(--ios-green); font-weight: bold; }
+        .res-wrong { color: var(--ios-red); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <!-- Active Quiz View -->
+    <div id="quiz-view">
+        <div class="progress-header">
+            <div class="progress-container"><div id="progress-bar"></div></div>
+            <div id="meta-text" class="meta-info">Question 1 of 52</div>
+        </div>
+        <h2 id="question-text">Question loading...</h2>
+        <div id="options-container" class="options-list"></div>
+    </div>
+
+    <!-- Final Result View -->
+    <div id="result-view" class="result-screen">
+        <div id="score-ring" class="score-circle">0%</div>
+        <div id="status-label" class="status-text">Result</div>
+        <p id="score-text" class="detail-text"></p>
+        <button class="btn-retry" onclick="resetQuiz()">Take it Again</button>
+        
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody id="summary-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "A 72-year-old woman enrolls in online classes to learn graphic design despite having no prior experience with technology. Her progress demonstrates which principle of life-span development?", a: ["Development is multidirectional", "Development is contextual", "Development is plastic", "Development is normative"], c: 2 },
+        { q: "During adolescence, Miguel becomes physically stronger while simultaneously becoming more emotionally sensitive and socially withdrawn after repeated peer rejection. This BEST illustrates that development is:", a: ["Contextual", "Multidimensional", "Discontinuous", "Biological"], c: 1 },
+        { q: "A researcher argues that language acquisition is heavily influenced by exposure to caregivers, schools, and culture rather than inherited traits. Which developmental issue is MOST directly emphasized?", a: ["Stability", "Discontinuity", "Nurture", "Nature"], c: 2 },
+        { q: "A child who experienced warm, responsive caregiving during infancy later demonstrates confidence in friendships and romantic relationships. According to John Bowlby, this outcome is MOST likely associated with:", a: ["Reciprocal determinism", "Secure attachment", "Imprinting", "Industry"], c: 1 },
+        { q: "A psychologist studying children compares 8-year-olds, 12-year-olds, and 16-year-olds at one point in time to examine moral reasoning differences. Which research method is being used?", a: ["Longitudinal approach", "Experimental design", "Cross-sectional approach", "Cohort sequential approach"], c: 2 },
+        { q: "A professor observes that students who actively participate in class tend to receive more positive attention from teachers, which further increases classroom participation. Albert Bandura would MOST likely describe this as:", a: ["Negative reinforcement", "Reciprocal determinism", "Cohort effect", "Continuity"], c: 1 },
+        { q: "A toddler insists on feeding herself despite repeatedly spilling food. Her parents encourage her attempts rather than criticize her mistakes. According to Erik Erikson, successful resolution of this stage will MOST likely foster:", a: ["Hope", "Competence", "Will", "Fidelity"], c: 2 },
+        { q: "Researchers find that individuals who lived through a global economic recession during adolescence tend to value financial security more strongly in adulthood than other generations. This finding BEST reflects:", a: ["Chronosystem influences", "Cohort effects", "Non-normative life events", "Biological age differences"], c: 1 },
+        { q: "A student studies harder because her parents stop nagging her whenever she completes assignments early. The increase in studying behavior is maintained primarily through:", a: ["Positive reinforcement", "Positive punishment", "Negative punishment", "Negative reinforcement"], c: 3 },
+        { q: "A child believes that a taller glass contains more water than a shorter glass, even when both contain the same amount. According to Jean Piaget, the child is MOST likely in the:", a: ["Sensorimotor stage", "Concrete operational stage", "Preoperational stage", "Formal operational stage"], c: 2 },
+        { q: "A teenager begins questioning political systems, ethical dilemmas, and hypothetical future events. This pattern of thinking is MOST characteristic of the:", a: ["Concrete operational stage", "Formal operational stage", "Sensorimotor stage", "Preoperational stage"], c: 1 },
+        { q: "A child observes an older sibling receiving praise for cleaning their room and then begins cleaning their own room without direct instruction. This behavior BEST demonstrates:", a: ["Operant extinction", "Classical conditioning", "Observational learning", "Imprinting"], c: 2 },
+        { q: "A psychologist aims to determine whether sleep deprivation directly causes reduced memory performance. Which research design would be MOST appropriate?", a: ["Correlational research", "Experimental research", "Case study", "Cross-sectional research"], c: 1 },
+        { q: "A 45-year-old man devotes much of his time mentoring younger employees and supporting community projects. According to Erikson, he is MOST likely resolving the conflict of:", a: ["Integrity vs. despair", "Industry vs. inferiority", "Intimacy vs. isolation", "Generativity vs. stagnation"], c: 3 },
+        { q: "A researcher records how often preschool children share toys during free play without interfering in their activities. Which data collection method is MOST clearly being used?", a: ["Standardized testing", "Interview", "Observation", "Experimental manipulation"], c: 2 },
+        { q: "A boy becomes fearful and avoids initiating activities after being constantly criticized for making mistakes during early childhood. According to Erikson, this outcome MOST strongly reflects unresolved:", a: ["Shame and doubt", "Inferiority", "Guilt", "Isolation"], c: 2 },
+        { q: "A psychologist states that human development cannot be understood without considering interactions among family, school, culture, and historical events. This statement MOST closely aligns with:", a: ["Psychoanalytic theory", "Ethological theory", "Ecological theory", "Behavioral theory"], c: 2 },
+        { q: "A newborn gosling follows the first moving object it encounters shortly after hatching. Konrad Lorenz described this process as:", a: ["Attachment", "Conditioning", "Modeling", "Imprinting"], c: 3 },
+        { q: "An elderly man reflects on his life with satisfaction and acceptance despite experiencing hardships. According to Erikson, he has MOST successfully achieved:", a: ["Fidelity", "Wisdom", "Hope", "Care"], c: 1 },
+        { q: "A teacher removes recess privileges whenever students speak during examinations. The teacher’s strategy is BEST classified as:", a: ["Positive punishment", "Negative punishment", "Negative reinforcement", "Positive reinforcement"], c: 1 },
+        { q: "A developmental psychologist emphasizes that there are specific windows during which certain experiences are especially important for normal development. This idea is MOST associated with:", a: ["Critical periods", "Reciprocal determinism", "Continuity", "Conservation"], c: 0 },
+        { q: "A researcher discovers that increased social media use is associated with decreased sleep quality among adolescents but cannot conclude that one causes the other. This is because the study is:", a: ["Experimental", "Longitudinal", "Correlational", "Cross-sectional"], c: 2 },
+        { q: "A mother’s stressful workplace environment affects how much time she spends interacting with her child, even though the child never directly experiences the workplace itself. In Bronfenbrenner’s model, the workplace belongs to the:", a: ["Microsystem", "Mesosystem", "Exosystem", "Macrosystem"], c: 2 },
+        { q: "A young adult avoids close emotional relationships because of fear of rejection and abandonment. According to Erikson, this difficulty is MOST related to unresolved conflict involving:", a: ["Initiative vs. guilt", "Intimacy vs. isolation", "Identity vs. confusion", "Industry vs. inferiority"], c: 1 },
+        { q: "A psychologist conducts an in-depth investigation of one child with extraordinary mathematical abilities in order to understand giftedness. This research method is BEST described as a:", a: ["Survey", "Longitudinal study", "Standardized assessment", "Case study"], c: 3 },
+        { q: "A child learns that tantrums are effective because each tantrum results in receiving candy from caregivers. The tantrums are being maintained primarily through:", a: ["Negative reinforcement", "Positive punishment", "Positive reinforcement", "Observational learning"], c: 2 },
+        { q: "A teenager who once struggled socially gradually develops confidence after years of supportive peer interactions. This scenario BEST supports which developmental issue?", a: ["Stability", "Change", "Discontinuity", "Nature"], c: 1 },
+        { q: "A researcher argues that development occurs through a gradual accumulation of small changes rather than abrupt stage-like shifts. This position BEST reflects:", a: ["Discontinuity", "Ethology", "Continuity", "Cohort theory"], c: 2 },
+        { q: "A child who excels academically begins to feel inadequate after repeated comparisons with exceptionally high-achieving classmates. According to Erikson, this child is at risk of developing:", a: ["Shame", "Inferiority", "Isolation", "Despair"], c: 1 },
+        { q: "A psychologist measures intelligence using the same instructions and scoring procedures for every participant to ensure consistency. The psychologist is MOST likely using a:", a: ["Survey", "Case study", "Standardized test", "Naturalistic observation"], c: 2 },
+        { q: "An older adult notices declining physical strength but improved emotional regulation and decision-making skills. This BEST demonstrates that development is:", a: ["Plastic", "Multidirectional", "Contextual", "Normative"], c: 1 },
+        { q: "A developmental researcher combines findings from psychology, biology, sociology, and education to understand adolescent behavior. This BEST reflects the idea that developmental science is:", a: ["Multidimensional", "Contextual", "Multidisciplinary", "Normative"], c: 2 },
+        { q: "A psychologist argues that human behavior can only be understood within the setting in which it occurs, including family structure, culture, and social expectations. This reflects the principle that development is:", a: ["Continuous", "Plastic", "Biological", "Contextual"], c: 3 },
+        { q: "After suffering partial memory decline, an elderly woman develops compensatory note-taking strategies to maintain independence in daily activities. This BEST illustrates development involving:", a: ["Stability and change", "Continuity and discontinuity", "Growth, maintenance, and regulation of loss", "Reciprocal determinism"], c: 2 },
+        { q: "A child inherits strong athletic ability from his parents, but his talent only becomes exceptional after years of training and encouragement from coaches. This BEST supports the view that development is:", a: ["Discontinuous", "A co-construction of biology, culture, and the individual", "Entirely determined by heredity", "Governed by critical periods alone"], c: 1 },
+        { q: "Researchers consistently find that children from economically disadvantaged backgrounds have fewer educational opportunities and increased stress exposure. This finding MOST directly concerns:", a: ["Cohort effects", "Macrosystem influence", "Socioeconomic status (SES)", "Psychological age"], c: 2 },
+        { q: "Puberty-related hormonal changes that alter body structure and sexual maturation are BEST categorized as:", a: ["Biological processes", "Cognitive processes", "Socioemotional processes", "Contextual influences"], c: 0 },
+        { q: "A child improves in reasoning, problem-solving, and memory strategies during middle childhood. These changes BEST represent:", a: ["Biological processes", "Cognitive processes", "Socioemotional processes", "Ethological influences"], c: 1 },
+        { q: "An adolescent becomes increasingly capable of managing emotions and forming meaningful peer relationships. These changes are MOST associated with:", a: ["Biological processes", "Cognitive processes", "Socioemotional processes", "Cohort effects"], c: 2 },
+        { q: "Despite being 70 years old chronologically, a man has the cardiovascular health and physical stamina typical of someone decades younger. This BEST reflects his:", a: ["Social age", "Psychological age", "Biological age", "Developmental age"], c: 2 },
+        { q: "A 16-year-old consistently demonstrates mature emotional judgment, excellent coping skills, and advanced self-regulation beyond peers of the same age. This MOST reflects advanced:", a: ["Biological age", "Psychological age", "Social age", "Chronological age"], c: 1 },
+        { q: "A 20-year-old supporting younger siblings financially and acting as head of the household may be perceived as older than peers because of increased:", a: ["Psychological age", "Biological age", "Social age", "Mental age"], c: 2 },
+        { q: "The onset of menopause among middle-aged women is BEST classified as a:", a: ["Normative age-graded influence", "Normative history-graded influence", "Non-normative life event", "Cohort effect"], c: 0 },
+        { q: "Individuals who experienced widespread school closures during a pandemic share developmental experiences unique to their generation. This BEST represents:", a: ["Normative age-graded influence", "Normative history-graded influence", "Non-normative life event", "Microsystem effect"], c: 1 },
+        { q: "A teenager unexpectedly loses both parents in an accident, dramatically altering the course of development. This is BEST categorized as a: ", a: ["Normative age-graded influence", "Normative history-graded influence", "Non-normative life event", "Cohort effect"], c: 2 },
+        { q: "An adult who is excessively rigid, obsessively organized, and unwilling to share resources is displaying characteristics Freud associated with:", a: ["Castration anxiety", "Sexual deviance", "Anal retentive personality", "Inferiority complex"], c: 2 },
+        { q: "A supervisor refuses to consider alternative methods and stubbornly insists on doing tasks only one specific way despite repeated inefficiency. This trait BEST reflects:", a: ["Stinginess", "Obstinacy", "Integrity", "Generativity"], c: 1 },
+        { q: "A wealthy businessman avoids spending money even on necessities and becomes distressed when asked to share resources. Freud would MOST likely describe this tendency as:", a: ["Orderliness", "Stinginess", "Initiative", "Inferiority"], c: 1 },
+        { q: "A woman becomes extremely distressed whenever objects on her desk are moved slightly out of alignment. This characteristic is MOST associated with:", a: ["Fidelity", "Guilt", "Orderliness", "Isolation"], c: 2 },
+        { q: "According to Freud, a young boy’s unconscious fear that his father may punish him for forbidden desires toward his mother is termed:", a: ["Imprinting", "Inferiority anxiety", "Castration anxiety", "Identity confusion"], c: 2 },
+        { q: "A behavior considered acceptable in one culture but viewed as highly inappropriate in another demonstrates the socially relative nature of:", a: ["Attachment", "Identity formation", "Sexual deviance", "Imprinting"], c: 2 },
+        { q: "An infant whose needs are met consistently develops a basic belief that others are dependable and caring. According to Erikson, this reflects successful resolution of:", a: ["Trust vs. mistrust", "Autonomy vs. shame", "Initiative vs. guilt", "Identity vs. confusion"], c: 0 }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let userRecord = [];
+
+    function initQuiz() {
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentQuestion];
+        document.getElementById("meta-text").innerText = `Question ${currentQuestion + 1} of ${questions.length}`;
+        document.getElementById("question-text").innerText = q.q;
+        
+        const container = document.getElementById("options-container");
+        container.innerHTML = "";
+        
+        q.a.forEach((option, index) => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = option;
+            btn.onclick = () => selectAnswer(index);
+            container.appendChild(btn);
+        });
+
+        // Update progress bar
+        const progress = ((currentQuestion) / questions.length) * 100;
+        document.getElementById("progress-bar").style.width = `${progress}%`;
+    }
+
+    function selectAnswer(index) {
+        const correct = questions[currentQuestion].c;
+        const isCorrect = (index === correct);
+        
+        if (isCorrect) score++;
+        userRecord.push(isCorrect);
+
+        currentQuestion++;
+
+        if (currentQuestion < questions.length) {
+            renderQuestion();
+        } else {
+            showFinalResults();
+        }
+    }
+
+    function showFinalResults() {
+        document.getElementById("quiz-view").style.display = "none";
+        document.getElementById("result-view").style.display = "block";
+        
+        const percentage = Math.round((score / questions.length) * 100);
+        const ring = document.getElementById("score-ring");
+        const status = document.getElementById("status-label");
+        
+        ring.innerText = `${percentage}%`;
+        document.getElementById("score-text").innerText = `You correctly answered ${score} out of ${questions.length} questions.`;
+
+        if (percentage >= 75) {
+            ring.className = "score-circle pass";
+            status.innerText = "Passed!";
+            status.style.color = "var(--ios-green)";
+        } else {
+            ring.className = "score-circle fail";
+            status.innerText = "Failed";
+            status.style.color = "var(--ios-red)";
+        }
+
+        // Build summary table
+        const tableBody = document.getElementById("summary-body");
+        tableBody.innerHTML = "";
+        userRecord.forEach((res, i) => {
+            const row = `<tr>
+                <td>${i+1}</td>
+                <td class="${res ? 'res-correct' : 'res-wrong'}">${res ? 'Correct' : 'Incorrect'}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
+    }
+
+    function resetQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        userRecord = [];
+        document.getElementById("quiz-view").style.display = "block";
+        document.getElementById("result-view").style.display = "none";
+        renderQuestion();
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>
